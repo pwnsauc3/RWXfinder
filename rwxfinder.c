@@ -105,9 +105,9 @@ void TraverseDirectory(const char* directory)
 int main()
 {
     // Setting PATH to check
-    SetDllDirectory("C:\\Users\\low-priv\\Desktop\\2023 q3");
+    SetDllDirectory("C:\\Program Files (x86)");
 
-    TraverseDirectory("C:\\Users\\low-priv\\Desktop\\2023 q3");
+    TraverseDirectory("C:\\");
 
     return 0;
 }
