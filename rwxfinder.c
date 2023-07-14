@@ -66,6 +66,13 @@ void CheckDLLForRWX(const char* dllPath)
         printf("[RWX] %s\n", dllPath);
         SetConsoleColor(7); // Set text color to default
 
+    printf("Section Name: %.8s\n", sectionHeader->Name);
+    printf("Virtual Size: 0x%X\n", sectionHeader->Misc.VirtualSize);
+    printf("Virtual Address: 0x%X\n", sectionHeader->VirtualAddress);
+    printf("Size of Raw Data: 0x%X\n", sectionHeader->SizeOfRawData);
+    printf("Characteristics: 0x%X\n", sectionHeader->Characteristics);
+    printf("---------------------------\n");
+
         // Perform additional testing or analysis on the DLL here
         // ...
 
@@ -86,16 +93,33 @@ void TraverseDirectory(const char* directory)
     WIN32_FIND_DATA findData;
     HANDLE findHandle;
 
-    sprintf(searchPath, "%s\\*.dll", directory);
+    sprintf(searchPath, "%s\\*", directory);
     findHandle = FindFirstFile(searchPath, &findData);
 
     if (findHandle != INVALID_HANDLE_VALUE)
     {
         do
         {
-            char filePath[MAX_PATH];
-            sprintf(filePath, "%s\\%s", directory, findData.cFileName);
-            CheckDLLForRWX(filePath);
+            if (strcmp(findData.cFileName, ".") != 0 && strcmp(findData.cFileName, "..") != 0)
+            {
+                char filePath[MAX_PATH];
+                sprintf(filePath, "%s\\%s", directory, findData.cFileName);
+
+                if (findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                {
+                    // Recursive call for subdirectories
+                    TraverseDirectory(filePath);
+                }
+                else if (findData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
+                {
+                    // Check if the file is a DLL
+                    const char* extension = strrchr(filePath, '.');
+                    if (extension != NULL && _stricmp(extension, ".dll") == 0)
+                    {
+                        CheckDLLForRWX(filePath);
+                    }
+                }
+            }
         } while (FindNextFile(findHandle, &findData));
 
         FindClose(findHandle);
